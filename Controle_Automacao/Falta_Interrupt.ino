@@ -152,9 +152,10 @@ void atualizacao_status(char *tok)
   {
   }
 }
-
+// Caso algo dê errado, atualiza a pane e envia mensagem
 void atualizacao_pane()
 {
+  float horario_da_pane = 0;
   if ((voltimetro)<=3 || (temperatura_ar)>=25) // Condicional generica
   { 
     while (contador <2)
@@ -162,16 +163,38 @@ void atualizacao_pane()
       flag_envio = 4;
       envia_mensagem();
       contador= contador +1;
+      delay (5000);
     }
-    
-    delay(30000);
-    contador = 0; 
+
+    if (horario_da_pane == 0)
+    {
+      horario_da_pane = millis ();
+    }
+
+    else
+    {
+      if (millis () - horario_da_pane >=300000)
+      {
+        while (contador <2)
+        {
+          flag_envio = 4;
+          envia_mensagem ();
+          contador = contador + 1;
+          delay (5000);
+        }
+        horario_da_pane = 0;
+      }
+    }
+    delay (60000);
+    contador = 0;
   }
 
-  else 
+  else
   {
   }
+
 }
+
 
 //Rotina de envio de SMS
 void envia_mensagem()
