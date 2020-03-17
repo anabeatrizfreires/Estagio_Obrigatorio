@@ -155,6 +155,7 @@ void atualizacao_status(char *tok)
 
 void atualizacao_pane()
 {
+  float horario_da_pane = 0;
   if ((voltimetro)<=3 || (temperatura_ar)>=25) // Condicional generica
   { 
     while (contador <2)
@@ -162,15 +163,36 @@ void atualizacao_pane()
       flag_envio = 4;
       envia_mensagem();
       contador= contador +1;
+      delay (5000);
     }
-    
-    delay(30000);
-    contador = 0; 
+
+    if (horario_da_pane == 0)
+    {
+      horario_da_pane = millis ();
+    }
+
+    else
+    {
+      if (millis () - horario_da_pane >=300000)
+      {
+        while (contador <2)
+        {
+          flag_envio = 4;
+          envia_mensagem ();
+          contador = contador + 1;
+          delay (5000);
+        }
+        horario_da_pane = 0;
+      }
+    }
+    delay (60000);
+    contador = 0;
   }
 
-  else 
+  else
   {
   }
+
 }
 
 //Rotina de envio de SMS
@@ -248,14 +270,8 @@ void recebe_mensagem ()
 void mensagem_numero_1 ()
 {
   
-  const int valueLDR1 = (analogRead(LDR1));
-  const int valueLDR2 = (analogRead(LDR2));
-  const int valueLDR3 = (analogRead(LDR3));
-  const int value_buttom1 = (digitalRead (buttom1));
-  const int value_buttom2 = (digitalRead (buttom2));
-  const int value_buttom3 = (digitalRead (buttom3));
-  const int value_buttom4 = (digitalRead (buttom4));
-  
+  leitura_portas ();
+
   Serial.flush();
   delay(1000);
   mySerial.println("AT+CMGF=1\r"); 
@@ -265,46 +281,13 @@ void mensagem_numero_1 ()
   flag_envio = 0;
   Serial.flush();
   delay(1000);
-  mySerial.print("Local - Bancada\nTemperatura: "); mySerial.print(temperatura_ar); mySerial.print("C\n"); mySerial.print("Tensao: "); mySerial.print(DC_AC); mySerial.println("V");
-  Serial.flush();
-  delay(1000);
-  mySerial.print("A1: "); 
-  const int statusLDR1 = (valueLDR1 <600 ? mySerial.println("Desabilitado") : mySerial.println(valueLDR1));
-  mySerial.print("A2: ");
-  const int statusLDR2 = (valueLDR2 <600 ? mySerial.println("Desabilitado") : mySerial.println(valueLDR2));
-  mySerial.print("A3: ");
-  const int statusLDR3 = (valueLDR3 <600 ? mySerial.println("Desabilitado") : mySerial.println(valueLDR3)); 
-  
-    if (value_buttom4 == HIGH)
-    {
-      mySerial.print("D1: ");
-      const int status_buttom1 = (value_buttom1 == HIGH ? mySerial.println("0") : mySerial.println("1"));
-      mySerial.print("D2: ");
-      const int status_buttom2 = (value_buttom2 == HIGH ? mySerial.println("0") : mySerial.println("1"));
-      mySerial.print("D3: ");
-      const int status_buttom3 = (value_buttom3 == HIGH ? mySerial.println("0") : mySerial.println("1")); 
-    }
 
-    else
-    {
-      mySerial.println("D1: Desabilitado");
-      mySerial.println("D2: Desabilitado");
-      mySerial.println("D3: Desabilitado");
-    } 
-    
-  delay(1000);
-  mySerial.write(26);
+  mensagem_estruturada ();
 }
 
 void mensagem_numero_2 ()
 {
-  const int valueLDR1 = (analogRead(LDR1));
-  const int valueLDR2 = (analogRead(LDR2));
-  const int valueLDR3 = (analogRead(LDR3));
-  const int value_buttom1 = (digitalRead (buttom1));
-  const int value_buttom2 = (digitalRead (buttom2));
-  const int value_buttom3 = (digitalRead (buttom3));
-  const int value_buttom4 = (digitalRead (buttom4));
+  leitura_portas ();
   
   Serial.flush();
   delay(1000);
@@ -315,38 +298,28 @@ void mensagem_numero_2 ()
   flag_envio = 0;
   Serial.flush();
   delay(1000);
-  mySerial.print("Local - Bancada\nTemperatura: "); mySerial.print(temperatura_ar); mySerial.print("C\n"); mySerial.print("Tensao: "); mySerial.print(DC_AC); mySerial.println("V");
-  Serial.flush();
-  delay(1000);
-  mySerial.print("A1: "); 
-  const int statusLDR1 = (valueLDR1 <600 ? mySerial.println("Desabilitado") : mySerial.println(valueLDR1));
-  mySerial.print("A2: ");
-  const int statusLDR2 = (valueLDR2 <600 ? mySerial.println("Desabilitado") : mySerial.println(valueLDR2));
-  mySerial.print("A3: ");
-  const int statusLDR3 = (valueLDR3 <600 ? mySerial.println("Desabilitado") : mySerial.println(valueLDR3));
-  
-    if (value_buttom4 == HIGH)
-    {
-      mySerial.print("D1: ");
-      const int status_buttom1 = (value_buttom1 == HIGH ? mySerial.println("0") : mySerial.println("1"));
-      mySerial.print("D2: ");
-      const int status_buttom2 = (value_buttom2 == HIGH ? mySerial.println("0") : mySerial.println("1"));
-      mySerial.print("D3: ");
-      const int status_buttom3 = (value_buttom3 == HIGH ? mySerial.println("0") : mySerial.println("1")); 
-    }
 
-    else
-    {
-      mySerial.println("D1: Desabilitado");
-      mySerial.println("D2: Desabilitado");
-      mySerial.println("D3: Desabilitado"); 
-    } 
-    
-  delay(1000);
-  mySerial.write(26);
+  mensagem_estruturada ();
 }
 
-void mensagem_numero_3()
+void mensagem_numero_3 ()
+{
+  leitura_portas ();
+  
+  Serial.flush();
+  delay(1000);
+  mySerial.println("AT+CMGF=1\r"); 
+  Serial.flush();
+  delay(1000);
+  mySerial.println(String(F("AT+CMGS=\"")) + number_chip_3+ String(F("\"\r"))); 
+  flag_envio = 0;
+  Serial.flush();
+  delay(1000);
+
+  mensagem_estruturada ();
+}
+
+void leitura_portas ()
 {
   const int valueLDR1 = (analogRead(LDR1));
   const int valueLDR2 = (analogRead(LDR2));
@@ -354,18 +327,13 @@ void mensagem_numero_3()
   const int value_buttom1 = (digitalRead (buttom1));
   const int value_buttom2 = (digitalRead (buttom2));
   const int value_buttom3 = (digitalRead (buttom3));
-  const int value_buttom4 = (digitalRead (buttom4));
-  
-  Serial.flush();
-  delay(1000);
-  mySerial.println("AT+CMGF=1\r"); 
-  Serial.flush();
-  delay(1000);
-  mySerial.println(String(F("AT+CMGS=\"")) + number_chip_3 + String(F("\"\r")));
-  flag_envio = 0;  
-  Serial.flush();
-  delay(1000);
-  mySerial.print("Local - Bancada\nTemperatura: "); mySerial.print(temperatura_ar); mySerial.print("C\n"); mySerial.print("Tensao: "); mySerial.print(DC_AC); mySerial.println("V");
+  const int value_buttom4 = (digitalRead (buttom4)); 
+}
+
+void mensagem_estruturada ()
+{
+  mySerial.print("Local - Bancada\nTemperatura: "); mySerial.print(temperatura_ar); mySerial.print("C\n"); mySerial.print("Tensao: ");
+  mySerial.print(DC_AC); mySerial.println("V");
   Serial.flush();
   delay(1000);
   mySerial.print("A1: "); 
@@ -391,7 +359,7 @@ void mensagem_numero_3()
       mySerial.println("D2: Desabilitado");
       mySerial.println("D3: Desabilitado");
     } 
-        
+    
   delay(1000);
   mySerial.write(26);
 }
@@ -452,8 +420,3 @@ void loop ()
   atualizacao_pane ();
   recebe_mensagem();
 }
-
-	
-	
-	
-
